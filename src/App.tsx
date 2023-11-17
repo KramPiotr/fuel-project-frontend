@@ -3,9 +3,11 @@ import "./App.css";
 // Import the contract factory -- you can find the name in index.ts.
 // You can also do command + space and the compiler will suggest the correct name.
 import { CounterContractAbi__factory } from "./contracts";
+import { BaseAssetId } from "fuels";
 
 // The address of the contract deployed the Fuel testnet
-const CONTRACT_ID ="0x8bb2909c49e075e5a2f841f905b0369cd22a29c6ce30ebea991ec3ce4100273b"
+// const CONTRACT_ID ="0x8bb2909c49e075e5a2f841f905b0369cd22a29c6ce30ebea991ec3ce4100273b"
+const CONTRACT_ID="0xfcb5c2f2c930f1e0db04af9fd75cdd34b82f838e7b379c1858c59a46905f9b83"
 
 function App() {
   const [connected, setConnected] = useState<boolean>(false);
@@ -55,13 +57,19 @@ function App() {
   }
 
   async function increment() {
+    console.log("Trying to increment")
     if (window.fuel) {
       const wallet = await window.fuel.getWallet(account);
       const contract = CounterContractAbi__factory.connect(CONTRACT_ID, wallet);
       // Creates a transactions to call the increment function
       // because it creates a TX and updates the contract state this requires the wallet to have enough coins to cover the costs and also to sign the Transaction
       try {
-        await contract.functions.increment().txParams({ gasPrice: 1 }).call();
+        await contract.functions
+          .increment()
+          .callParams({
+            forward: [10000000, BaseAssetId]
+          })
+          .txParams({ gasPrice: 1 }).call();
         getCount();
       } catch (err) {
         console.log("error sending transaction...", err);
@@ -79,7 +87,7 @@ function App() {
             <>
               <h3>Counter: {counter}</h3>
               <button style={buttonStyle} onClick={increment}>
-                Increment
+                Increment, costs 10**7 coins
               </button>
             </>
           ) : (
